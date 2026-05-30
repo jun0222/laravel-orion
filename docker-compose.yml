@@ -1,0 +1,75 @@
+services:
+  app:
+    build:
+      context: .
+      target: production
+    ports:
+      - "${APP_PORT:-8000}:80"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor        # keep container's vendor
+      - /var/www/html/public/build  # keep container's compiled assets
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - laravel
+
+  queue:
+    build:
+      context: .
+      target: production
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - laravel
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - laravel
+
+  # ── Uncomment to add MySQL ───────────────────────────────────────────────────
+  # db:
+  #   image: mysql:8.4
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: secret
+  #     MYSQL_DATABASE: laravel_orion
+  #     MYSQL_USER: laravel
+  #     MYSQL_PASSWORD: secret
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - db-data:/var/lib/mysql
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - laravel
+
+networks:
+  laravel:
+    driver: bridge
+
+volumes:
+  redis-data:
+  # db-data:  # Uncomment when enabling MySQL
