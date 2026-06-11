@@ -1,5 +1,16 @@
 @import 'tailwindcss';
 
+@keyframes cool-japan-pop {
+  0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  80%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.cool-japan-pop {
+  animation: cool-japan-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
